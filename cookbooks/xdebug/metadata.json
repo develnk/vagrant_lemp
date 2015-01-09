@@ -1,0 +1,48 @@
+{
+  "name": "xdebug",
+  "description": "Installs/Configures xdebug",
+  "long_description": "[![Build Status](https://travis-ci.org/escapestudios-cookbooks/xdebug.png)](https://travis-ci.org/escapestudios-cookbooks/xdebug)\n\nDescription\n===========\n\nThis cookbook provides an easy way to install Xdebug.\n\nMore information?\n* http://xdebug.org/\n\nRequirements\n============\n\n## Platforms:\n\n* Debian\n* Ubuntu\n* RHEL\n* CentOS\n* Fedora\n* Scientific\n* Amazon\n* Windows\n* SmartOS\n\nAttributes\n==========\n\n## default.rb:\n\n* `node['xdebug']['version']` - The Xdebug version that will be installed, defaults to 'latest'\n* `node['xdebug']['config_file']` - defaults to nil\n* `node['xdebug']['web_server']['service_name']` - defaults to 'apache2'\n* `node['xdebug']['directives']` - hash of directives and values to append to `xdebug.ini`, defaults to {}\n\nUsage\n=====\n\n1. include `recipe[xdebug]` in a run list\n2. change the `node['xdebug']['config_file']` attribute to your xdebug.ini path (eg. '/etc/php5/conf.d/xdebug.ini'), double-check the value of `node['xdebug']['web_server']['service_name']` and set the values of the directives (eg. { \"remote_autostart\" => 1, \"remote_connect_back\" => 1, \"remote_enable\" => 1, \"remote_log\" => '/tmp/remote.log' }).\n--- OR ---\noverride the attributes on a higher level (http://wiki.opscode.com/display/chef/Attributes#Attributes-AttributesPrecedence)\n\nReferences\n==========\n\n* [Xdebug home page] (http://xdebug.org/)\n* a very big thanks to David King <dking@xforty.com> for the original version of this cookbook\n\nLicense and Authors\n===================\n\nAuthor: David Joos <david.joos@escapestudios.com>\nAuthor: Escape Studios Development <dev@escapestudios.com>\nCopyright: 2014, Escape Studios\n\nUnless otherwise noted, all files are released under the MIT license,\npossible exceptions will contain licensing information in them.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.",
+  "maintainer": "Escape Studios",
+  "maintainer_email": "dev@escapestudios.com",
+  "license": "MIT",
+  "platforms": {
+    "debian": ">= 0.0.0",
+    "ubuntu": ">= 0.0.0",
+    "redhat": ">= 0.0.0",
+    "centos": ">= 0.0.0",
+    "fedora": ">= 0.0.0",
+    "scientific": ">= 0.0.0",
+    "amazon": ">= 0.0.0",
+    "windows": ">= 0.0.0",
+    "smartos": ">= 0.0.0"
+  },
+  "dependencies": {
+    "build-essential": ">= 0.0.0",
+    "php": ">= 0.0.0"
+  },
+  "recommendations": {
+
+  },
+  "suggestions": {
+
+  },
+  "conflicting": {
+
+  },
+  "providing": {
+
+  },
+  "replacing": {
+
+  },
+  "attributes": {
+
+  },
+  "groupings": {
+
+  },
+  "recipes": {
+    "xdebug": "Installs/configures xdebug."
+  },
+  "version": "1.0.0"
+}

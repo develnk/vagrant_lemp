@@ -1,0 +1,32 @@
+---
+driver:
+  name: vagrant
+  network:
+  - ["forwarded_port", {guest: 110, host: 8110, auto_correct: true}]
+  - ["forwarded_port", {guest: 995, host: 8995, auto_correct: true}]
+  - ["forwarded_port", {guest: 143, host: 8143, auto_correct: true}]
+  - ["forwarded_port", {guest: 993, host: 8993, auto_correct: true}]
+
+provisioner:
+  require_chef_omnibus: true
+
+platforms:
+- name: ubuntu-12.04
+  run_list: ["recipe[apt]"]
+- name: ubuntu-14.04
+  run_list: ["recipe[apt]"]
+- name: debian-7.6
+  run_list: ["recipe[apt]"]
+- name: centos-6.5
+- name: centos-7.0
+- name: fedora-18
+- name: fedora-19
+- name: fedora-20
+
+suites:
+- name: default
+  run_list:
+  - recipe[dovecot_test]
+- name: attributes
+  run_list:
+  - recipe[dovecot_test::attributes]
