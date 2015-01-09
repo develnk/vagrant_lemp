@@ -1,0 +1,7 @@
+DEPENDENCIES
+  phpapp
+    path: .
+    metadata: true
+
+GRAPH
+  phpapp (0.1.0)
