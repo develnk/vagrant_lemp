@@ -8,6 +8,21 @@
 #
 require 'fileutils'
 
+template "90forceyes" do
+  path "/etc/apt/apt.conf.d/90forceyes"
+  source "90forceyes.erb"
+  owner "root"
+  group "root"
+  mode 0644
+end
+
+include_recipe "apt"
+
+apt_repository "php5-5.6" do
+  uri "ppa:ondrej/php5-5.6"
+  distribution "trusty"
+end
+
 include_recipe "nginx"
 include_recipe "php"
 include_recipe "php::module_mysql"
@@ -17,22 +32,6 @@ include_recipe "php::module_gd"
 include_recipe "mysql::client"
 include_recipe "mysql::server"
 include_recipe "php5-fpm"
-
-template "90forceyes" do
-  path "/etc/apt/apt.conf.d/90forceyes"
-  source "90forceyes.erb"
-  owner "root"
-  group "root"
-  mode 0644
-end
-
-execute "add-apt-repository ppa:ondrej/php5-5.6" do
-  user "root"
-end
-
-execute "apt-get update" do
-  user "root"
-end
 
 
 template "php.ini" do
@@ -88,4 +87,19 @@ if node.has_key?("project") && node["project"].has_key?("sites")
       :enable
     end
   end
+end
+
+php5_fpm_pool "web" do
+  pool_user "www-data"
+  pool_group "www-data"
+  listen_address "127.0.0.1"
+  listen_port 9000
+  listen_owner "nobody"
+  listen_group "nobody"
+  listen_mode "0666"
+  php_ini_flags ( { "display_errors" => "on", "log_errors" => "on"} )
+  php_ini_values ( { "sendmail_path" => "/usr/sbin/sendmail -t -i -f www@develnk.ru", "memory_limit" => "256M"} )
+  overwrite true
+  action :create
+  notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
 end

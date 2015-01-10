@@ -30,7 +30,9 @@ default_attributes(
     },
 
     "php_fpm" => {
-        "run_update" => false
+        "run_update" => false,
+        "install_php_modules" => true,
+        "php_modules" => ["php5-common", "php5-mysql", "php5-curl", "php5-gd"]
     },
 
     "mysql" => {
