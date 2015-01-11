@@ -7,6 +7,8 @@ run_list(
     "recipe[nginx]",
     "recipe[php5-fpm::install]",
     "recipe[mysql]",
+    "recipe[git]",
+    "recipe[xdebug]",
 )
 
 default_attributes(
@@ -124,5 +126,13 @@ default_attributes(
         },
         "package_options" => "--force-yes"
 
-    }
+    },
+
+    "xdebug" => {
+        "web_server" => {
+            "service_name" => "nginx"
+        },
+        "config_file" => "/etc/php5/fpm/conf.d/xdebug.ini"
+
+}
 )

@@ -32,7 +32,8 @@ include_recipe "php::module_gd"
 include_recipe "mysql::client"
 include_recipe "mysql::server"
 include_recipe "php5-fpm"
-
+include_recipe 'git'
+include_recipe 'xdebug'
 
 template "php.ini" do
   path "#{node['php-fpm']['conf_dir']}/php.ini"
