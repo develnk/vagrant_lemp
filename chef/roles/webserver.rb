@@ -24,7 +24,7 @@ default_attributes(
         "php" => {
             "post_max_size" => "16M",
             "memory_limit" => "256M",
-            "max_execution_time" => "30",
+            "max_execution_time" => "120",
             "display_errors" => "On",
             "html_errors" => "Off",
             "display_startup_errors" => "Off",
@@ -132,7 +132,12 @@ default_attributes(
         "web_server" => {
             "service_name" => "nginx"
         },
-        "config_file" => "/etc/php5/fpm/conf.d/xdebug.ini"
-
-}
+        "config_file" => "/etc/php5/fpm/conf.d/xdebug.ini",
+        "directives" => {
+            "remote_autostart" => 1,
+            "remote_connect_back" => 1,
+            "remote_enable" => 1,
+            "remote_log" => '/tmp/remote.log'
+        }
+    }
 )
