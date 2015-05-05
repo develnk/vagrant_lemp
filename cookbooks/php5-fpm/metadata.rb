@@ -4,9 +4,9 @@ maintainer_email 'stajkowski'
 license          'Apache Open License'
 description      'Installs/Configures php5-fpm'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          '0.4.0'
+version          '0.4.4'
 
-depends 'hostupgrade'
+depends 'hostupgrade', ">= 0.1.3"
 
 supports 'ubuntu', ">= 10.04"
 supports 'debian', ">= 6.0"
@@ -17,7 +17,7 @@ supports 'Fedora', ">= 20.0"
 attribute 'php_fpm/install_php_modules',
           :display_name => "PHP5-FPM Install PHP Modules",
           :description => "Boolean value to indicate if additional php_modules should be installed.",
-          :type => "boolean",
+          :type => "string",
           :required => true,
           :recipes => [ 'php5_fpm::install' ],
           :default => "true"
@@ -25,7 +25,7 @@ attribute 'php_fpm/install_php_modules',
 attribute 'php_fpm/use_cookbook_repos',
           :display_name => "PHP5-FPM Use Cookbook Repos",
           :description => "Let the cookbook install repos for PHP5-FPM for earlier OS versions.",
-          :type => "boolean",
+          :type => "string",
           :required => true,
           :recipes => [ 'php5_fpm::install' ],
           :default => "true"
@@ -33,7 +33,7 @@ attribute 'php_fpm/use_cookbook_repos',
 attribute 'php_fpm/run_update',
           :display_name => "PHP5-FPM Run Update",
           :description => "Let the install recipe run an update and upgrade.",
-          :type => "boolean",
+          :type => "string",
           :required => true,
           :recipes => [ 'php5_fpm::install' ],
           :default => "true"
@@ -41,7 +41,7 @@ attribute 'php_fpm/run_update',
 attribute 'php_fpm/create_users',
           :display_name => "PHP5-FPM Create Users",
           :description => "Boolean value to indicate if users for pools should be added to the system.",
-          :type => "boolean",
+          :type => "string",
           :required => true,
           :recipes => [ 'php5_fpm::create_user' ],
           :default => "true"

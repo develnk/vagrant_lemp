@@ -8,7 +8,7 @@ When using the JSON option with recipes, if you do not wish to use a configurati
 configuration values if they are missing, future proofing the template generation with JSON.
 
 As of version 4.0, you can auto-calculate the procs and workers needed and define the percentage of resources the pool should consume on the server.  This allows for quick creation of php-fpm pools and not having
-to perform the calculation yourself.  Please see the LWRP attributes below and the auto-calculation example but the simplest explantation is the pm configuration will be determined by the calculation.  If the pm
+to perform the calculation yourself.  Please see the LWRP attributes below and the auto-calculation example, but the simplest explanation is the pm configuration will be determined by the calculation.  If the pm
 type is set to static then the max_children will only be used.  If the type is dynamic, the auto-calculation will populate the additional pm configuration options but not the pm.max_requests, this will need to be set
 manually.
 
@@ -23,7 +23,7 @@ manually.
 >CenOS 6.x and above
 >Fedora 20
 >#### Planned Improvements
->0.4.0]1 - Any additional bugs
+>0.4.3 - Any additional bugs
 >#### Required Cookbooks
 >hostupgrade
 
@@ -179,6 +179,21 @@ ______
         <td>listen_mode</td>
         <td>String Default: nil</td>
         <td>Sets the <i>listen.mode</i> attribute in the pool conf file.</td>
+    </tr>
+    <tr>
+        <td>use_sockets</td>
+        <td>Boolean Default: false</td>
+        <td>If set, this overrides IPv4 assignment for <i>listen</i> attribute in the pool conf file to use sockets</td>
+    </tr>
+    <tr>
+        <td>listen_socket</td>
+        <td>String Default: nil</td>
+        <td>Sets the <i>listen</i> attribute in the pool conf file.(Requires: use_sockets true)</td>
+    </tr>
+    <tr>
+        <td>listen_backlog</td>
+        <td>Integer Default: 65536</td>
+        <td>Sets the <i>listen.backlog</i> attribute in the pool conf file.</td>
     </tr>
     <tr>
         <td><b>PM Config</b></td>
@@ -368,48 +383,48 @@ ______
 
 ```
 php5_fpm_pool "example" do
-	pool_user "www-data"
-	pool_group "www-data"
-	listen_address "127.0.0.1"
-	listen_port 8000
-	listen_allowed_clients "127.0.0.1"
-	listen_owner "nobody"
-	listen_group "nobody"
-	listen_mode "0666"
+    pool_user "www-data"
+    pool_group "www-data"
+    listen_address "127.0.0.1"
+    listen_port 8000
+    listen_allowed_clients "127.0.0.1"
+    listen_owner "nobody"
+    listen_group "nobody"
+    listen_mode "0666"
     php_ini_flags (
                     { "display_errors" => "off", "log_errors" => "on"}
                   )
     php_ini_values (
                       { "sendmail_path" => "/usr/sbin/sendmail -t -i -f www@my.domain.com", "memory_limit" => "32M"}
                   )
-	overwrite true
-	action :create
-	notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
+    overwrite true
+    action :create
+    notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
 end
 ```
 
 ```
 php5_fpm_pool "example" do
-	pool_user "fpm_user"
-	pool_group "fpm_group"
-	listen_allowed_clients "127.0.0.1"
-	pm_max_children 30
-	pm_start_servers 10
-	pm_min_spare_servers 5
-	pm_max_spare_servers 10
-	pm_process_idle_timeout "30s"
-	pm_max_requests 1000
-	pm_status_path "/mystatus"
-	ping_path "/myping"
-	ping_response "/myresponse"
+    pool_user "fpm_user"
+    pool_group "fpm_group"
+    listen_allowed_clients "127.0.0.1"
+    pm_max_children 30
+    pm_start_servers 10
+    pm_min_spare_servers 5
+    pm_max_spare_servers 10
+    pm_process_idle_timeout "30s"
+    pm_max_requests 1000
+    pm_status_path "/mystatus"
+    ping_path "/myping"
+    ping_response "/myresponse"
     php_ini_flags (
                       { "display_errors" => "on", "log_errors" => "off"}
                   )
     php_ini_values (
                        { "sendmail_path" => "/usr/sbin/sendmail -t -i -f www@my.yourdomain.com", "memory_limit" => "16M"}
                    )
-	action :modify
-	notifies :restart, "service[#{node["php_fpm"]["packag"]}]", :delayed
+    action :modify
+    notifies :restart, "service[#{node["php_fpm"]["packag"]}]", :delayed
 end
 ```
 <br />
@@ -419,25 +434,44 @@ end
 
 ```
 php5_fpm_pool "example" do
-	pool_user "fpm_user"
-	pool_group "fpm_group"
-	listen_allowed_clients "127.0.0.1"
+    pool_user "fpm_user"
+    pool_group "fpm_group"
+    listen_allowed_clients "127.0.0.1"
     auto_calculate true
     percent_share 80
     round_down true
-	pm_process_idle_timeout "30s"
-	pm_max_requests 1000
-	pm_status_path "/mystatus"
-	ping_path "/myping"
-	ping_response "/myresponse"
+    pm_process_idle_timeout "30s"
+    pm_max_requests 1000
+    pm_status_path "/mystatus"
+    ping_path "/myping"
+    ping_response "/myresponse"
     php_ini_flags (
                       { "display_errors" => "on", "log_errors" => "off"}
                   )
     php_ini_values (
                        { "sendmail_path" => "/usr/sbin/sendmail -t -i -f www@my.yourdomain.com", "memory_limit" => "16M"}
                    )
-	action :modify
-	notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
+    action :modify
+    notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
+end
+```
+<br />
+<br />
+
+### Sockets Example
+
+```
+php5_fpm_pool "example3sockets" do
+    pool_user "fpm_user"
+    pool_group "fpm_group"
+    use_sockets true
+    listen_socket "/var/run/phpfpm_example.sock"
+    listen_owner "fpm_user"
+    listen_group "fpm_group"
+    listen_mode "0660"
+    overwrite true
+    action :create
+    notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
 end
 ```
 

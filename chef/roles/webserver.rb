@@ -2,13 +2,13 @@ name "webserver"
 description "Web server developer configuration"
 
 run_list(
-    "recipe[apparmor]",
+    "recipe[apt]",
     "recipe[htop]",
     "recipe[nginx]",
+    "recipe[php]",
     "recipe[php5-fpm::install]",
-    "recipe[mysql]",
     "recipe[git]",
-    "recipe[xdebug]",
+    "recipe[phpapp]",
 )
 
 default_attributes(
@@ -30,13 +30,6 @@ default_attributes(
             "display_startup_errors" => "Off",
         },
     },
-
-    "php_fpm" => {
-        "run_update" => false,
-        "install_php_modules" => true,
-        "php_modules" => ["php5-common", "php5-mysql", "php5-curl", "php5-gd"]
-    },
-
     "mysql" => {
         "server_root_password" => "root",
         "server_debian_password" => "root",

@@ -71,6 +71,9 @@ def load_current_resource
     @current_resource.listen_owner(@new_resource.listen_owner)
     @current_resource.listen_group(@new_resource.listen_group)
     @current_resource.listen_mode(@new_resource.listen_mode)
+    @current_resource.use_sockets(@new_resource.use_sockets)
+    @current_resource.listen_socket(@new_resource.listen_socket)
+    @current_resource.listen_backlog(@new_resource.listen_backlog)
     #PM Configuration
     @current_resource.pm(@new_resource.pm)
     @current_resource.pm_max_children(@new_resource.pm_max_children)
@@ -137,14 +140,18 @@ def load_current_resource
                     @current_resource.pool_group(lstring.chomp.strip)
                 end
 
-                #Pull address and port
-                if configuration_exists(fline,"listen =")
-                    #split away the address and port
-                    sp_address = lstring.split(':').at(0)
-                    sp_port = lstring.split(':').at(1)
-                    #remove newline chars and whitespacing
-                    @current_resource.listen_address(sp_address.chomp.strip)
-                    @current_resource.listen_port(sp_port.chomp.strip.to_i)
+                #Pull address and port // If we are using sockets bypass
+                if configuration_exists(fline,"listen =") && !@current_resource.use_sockets
+                    if fline  =~ /.*\..*\..*\..*:.*/ #do a check on a valid ip address/port combination, if no match, just set new to current
+                      #split away the address and port
+                      sp_address = lstring.split(':').at(0)
+                      sp_port = lstring.split(':').at(1)
+                      #remove newline chars and whitespacing
+                      @current_resource.listen_address(sp_address.chomp.strip)
+                      @current_resource.listen_port(sp_port.chomp.strip.to_i)
+                    end #don't apply the current resource | this is for a socket to ip transition | will work for modify as well
+                elsif configuration_exists(fline,"listen =") && @current_resource.use_sockets  ## Only for sockets
+                    @current_resource.listen_socket(lstring.chomp.strip)
                 end
 
                 #Finish out base configuration options
@@ -152,6 +159,7 @@ def load_current_resource
                 configuration_exists(fline,"listen.owner =") ? @current_resource.listen_owner(lstring.chomp.strip) : nil
                 configuration_exists(fline,"listen.group =") ? @current_resource.listen_group(lstring.chomp.strip) : nil
                 configuration_exists(fline,"listen.mode =") ? @current_resource.listen_mode(lstring.chomp.strip) : nil
+                configuration_exists(fline,"listen.backlog =") ? @current_resource.listen_backlog(lstring.chomp.strip) : nil
 
                 #Start PM configuration
                 configuration_exists(fline,"pm =") ? @current_resource.pm(lstring.chomp.strip) : nil
@@ -179,8 +187,8 @@ def load_current_resource
                 configuration_exists(fline,"chroot =") ? @current_resource.chroot(lstring.chomp.strip) : nil
                 configuration_exists(fline,"catch_workers_output =") ? @current_resource.catch_workers_output(lstring.chomp.strip) : nil
                 configuration_exists(fline,"security.limit_extensions =") ? @current_resource.security_limit_extensions(lstring.chomp.strip) : nil
-                configuration_exists(fline,"rlimit_files =") ? @current_resource.rlimit_files(lstring.chomp.strip) : nil
-                configuration_exists(fline,"rlimit_core =") ? @current_resource.rlimit_core(lstring.chomp.strip) : nil
+                configuration_exists(fline,"rlimit_files =") ? @current_resource.rlimit_files(lstring.chomp.strip.to_i) : nil
+                configuration_exists(fline,"rlimit_core =") ? @current_resource.rlimit_core(lstring.chomp.strip.to_i) : nil
 
                 #Start PHP INI
                 configuration_exists(fline,"php_value[#{conf_file_variable}] =") && !@current_resource.php_ini_values.nil? ? tmp_values["#{conf_file_variable}"] = lstring.chomp.strip : nil
@@ -227,12 +235,17 @@ def create_file
         f.puts "###### Base Pool Configuration"
         f.puts "user = #{ @new_resource.pool_user }"
         f.puts "group = #{ @new_resource.pool_group }"
-        f.puts "listen = #{ @new_resource.listen_address }:#{ @new_resource.listen_port }"
+        if !@current_resource.use_sockets
+          f.puts "listen = #{ @new_resource.listen_address }:#{ @new_resource.listen_port }"
+        else
+            f.puts "listen = #{ @new_resource.listen_socket }"
+        end
 
         @current_resource.listen_allowed_clients != nil ? (f.puts "listen.allowed_clients = #{ @new_resource.listen_allowed_clients }") : nil
         @current_resource.listen_owner != nil ? (f.puts "listen.owner = #{ @new_resource.listen_owner }") : nil
         @current_resource.listen_group != nil ? (f.puts "listen.group = #{ @new_resource.listen_group }") : nil
         @current_resource.listen_mode != nil ? (f.puts "listen.mode = #{ @new_resource.listen_mode }") : nil
+        @current_resource.listen_backlog != nil ? (f.puts "listen.backlog = #{ @new_resource.listen_backlog }") : nil
 
         f.puts "###### PM Configuration"
         @current_resource.pm != nil ? (f.puts "pm = #{ @new_resource.pm }") : nil
@@ -317,80 +330,83 @@ def modify_file
     file_name = "#{ node["php_fpm"]["pools_path"] }/#{ @current_resource.pool_name }.conf"
 
     #Start Base Configuration
-    find_replace(file_name,"user = ",@current_resource.pool_user,@new_resource.pool_user)
-    find_replace(file_name,"group = ",@current_resource.pool_group,@new_resource.pool_group)
+    find_replace(file_name, "user = ", @current_resource.pool_user, @new_resource.pool_user)
+    find_replace(file_name, "group = ", @current_resource.pool_group, @new_resource.pool_group)
 
     #Replace IP Address and Port
-    if @current_resource.listen_address != @new_resource.listen_address || @current_resource.listen_port != @new_resource.listen_port
-        find_replace(file_name,"listen = ","#{ @current_resource.listen_address }:#{ @current_resource.listen_port }","#{ @new_resource.listen_address }:#{ @new_resource.listen_port }")
+    if @current_resource.listen_address != @new_resource.listen_address || @current_resource.listen_port != @new_resource.listen_port && (!@current_resource.use_sockets)
+        find_replace(file_name, "listen = ", "#{ @current_resource.listen_address }:#{ @current_resource.listen_port }", "#{ @new_resource.listen_address }:#{ @new_resource.listen_port }")
+    else
+        find_replace(file_name, "listen = ","#{ @current_resource.listen_socket }", "#{ @new_resource.listen_socket }")
     end
 
-    find_replace(file_name,"listen.allowed_clients = ",@current_resource.listen_allowed_clients,@new_resource.listen_allowed_clients)
-    find_replace(file_name,"listen.owner = ",@current_resource.listen_owner,@new_resource.listen_owner)
-    find_replace(file_name,"listen.group = ",@current_resource.listen_group,@new_resource.listen_group)
-    find_replace(file_name,"listen.mode = ",@current_resource.listen_mode,@new_resource.listen_mode)
+    find_replace(file_name, "listen.allowed_clients = ",@current_resource.listen_allowed_clients, @new_resource.listen_allowed_clients)
+    find_replace(file_name, "listen.owner = ",@current_resource.listen_owner, @new_resource.listen_owner)
+    find_replace(file_name, "listen.group = ",@current_resource.listen_group, @new_resource.listen_group)
+    find_replace(file_name, "listen.mode = ",@current_resource.listen_mode, @new_resource.listen_mode)
+    find_replace(file_name, "listen.backlog = ",@current_resource.listen_backlog, @new_resource.listen_backlog)
 
     #Start PM configuration
-    find_replace(file_name,"pm = ",@current_resource.pm,@new_resource.pm)
-    find_replace(file_name,"pm.max_children = ",@current_resource.pm_max_children,@new_resource.pm_max_children)
-    find_replace(file_name,"pm.start_servers = ",@current_resource.pm_start_servers,@new_resource.pm_start_servers)
-    find_replace(file_name,"pm.min_spare_servers = ",@current_resource.pm_min_spare_servers,@new_resource.pm_min_spare_servers)
-    find_replace(file_name,"pm.max_spare_servers = ",@current_resource.pm_max_spare_servers,@new_resource.pm_max_spare_servers)
-    find_replace(file_name,"pm.process_idle_timeout = ",@current_resource.pm_process_idle_timeout,@new_resource.pm_process_idle_timeout)
-    find_replace(file_name,"pm.max_requests = ",@current_resource.pm_max_requests,@new_resource.pm_max_requests)
-    find_replace(file_name,"pm.status_path = ",@current_resource.pm_status_path,@new_resource.pm_status_path)
+    find_replace(file_name, "pm = ",@current_resource.pm,@new_resource.pm)
+    find_replace(file_name, "pm.max_children = ",@current_resource.pm_max_children, @new_resource.pm_max_children)
+    find_replace(file_name, "pm.start_servers = ",@current_resource.pm_start_servers, @new_resource.pm_start_servers)
+    find_replace(file_name, "pm.min_spare_servers = ",@current_resource.pm_min_spare_servers, @new_resource.pm_min_spare_servers)
+    find_replace(file_name, "pm.max_spare_servers = ",@current_resource.pm_max_spare_servers, @new_resource.pm_max_spare_servers)
+    find_replace(file_name, "pm.process_idle_timeout = ",@current_resource.pm_process_idle_timeout, @new_resource.pm_process_idle_timeout)
+    find_replace(file_name, "pm.max_requests = ",@current_resource.pm_max_requests, @new_resource.pm_max_requests)
+    find_replace(file_name, "pm.status_path = ",@current_resource.pm_status_path, @new_resource.pm_status_path)
 
     #Start Ping
-    find_replace(file_name,"ping.path = ",@current_resource.ping_path,@new_resource.ping_path)
-    find_replace(file_name,"ping.response = ",@current_resource.ping_response,@new_resource.ping_response)
+    find_replace(file_name, "ping.path = ",@current_resource.ping_path, @new_resource.ping_path)
+    find_replace(file_name, "ping.response = ",@current_resource.ping_response, @new_resource.ping_response)
 
     #Start Logging
-    find_replace(file_name,"access.format = ",@current_resource.access_format,@new_resource.access_format.gsub("\\",""))
-    find_replace(file_name,"request_slowlog_timeout = ",@current_resource.request_slowlog_timeout,@new_resource.request_slowlog_timeout)
-    find_replace(file_name,"request_terminate_timeout = ",@current_resource.request_terminate_timeout,@new_resource.request_terminate_timeout)
-    find_replace(file_name,"access.log = ",@current_resource.access_log,@new_resource.access_log)
-    find_replace(file_name,"slowlog = ",@current_resource.slow_log,@new_resource.slow_log)
+    find_replace(file_name, "access.format = ",@current_resource.access_format, @new_resource.access_format.gsub("\\",""))
+    find_replace(file_name, "request_slowlog_timeout = ",@current_resource.request_slowlog_timeout, @new_resource.request_slowlog_timeout)
+    find_replace(file_name, "request_terminate_timeout = ",@current_resource.request_terminate_timeout, @new_resource.request_terminate_timeout)
+    find_replace(file_name, "access.log = ",@current_resource.access_log, @new_resource.access_log)
+    find_replace(file_name, "slowlog = ",@current_resource.slow_log, @new_resource.slow_log)
 
     #Start Misc
-    find_replace(file_name,"chdir = ",@current_resource.chdir,@new_resource.chdir)
-    find_replace(file_name,"chroot = ",@current_resource.chroot,@new_resource.chroot)
-    find_replace(file_name,"catch_workers_output = ",@current_resource.catch_workers_output,@new_resource.catch_workers_output)
-    find_replace(file_name,"security.limit_extensions = ",@current_resource.security_limit_extensions,@new_resource.security_limit_extensions)
-    find_replace(file_name,"rlimit_files = ",@current_resource.rlimit_files,@new_resource.rlimit_files)
-    find_replace(file_name,"rlimit_core = ",@current_resource.rlimit_core,@new_resource.rlimit_core)
+    find_replace(file_name, "chdir = ",@current_resource.chdir, @new_resource.chdir)
+    find_replace(file_name, "chroot = ",@current_resource.chroot, @new_resource.chroot)
+    find_replace(file_name, "catch_workers_output = ",@current_resource.catch_workers_output, @new_resource.catch_workers_output)
+    find_replace(file_name, "security.limit_extensions = ",@current_resource.security_limit_extensions, @new_resource.security_limit_extensions)
+    find_replace(file_name, "rlimit_files = ",@current_resource.rlimit_files, @new_resource.rlimit_files)
+    find_replace(file_name, "rlimit_core = ",@current_resource.rlimit_core, @new_resource.rlimit_core)
 
     #Start PHP INI Values
     if !@current_resource.php_ini_values.nil?
         @current_resource.php_ini_values.each do | k, v |
-            find_replace(file_name,"php_value[#{ k }] = ",v,@new_resource.php_ini_values["#{ k }"])
+            find_replace(file_name, "php_value[#{ k }] = ", v, @new_resource.php_ini_values["#{ k }"])
         end
     end
 
     #Start PHP INI Flags
     if !@current_resource.php_ini_flags.nil?
         @current_resource.php_ini_flags.each do | k, v |
-            find_replace(file_name,"php_flag[#{ k }] = ",v,@new_resource.php_ini_flags["#{ k }"])
+            find_replace(file_name, "php_flag[#{ k }] = ", v, @new_resource.php_ini_flags["#{ k }"])
         end
     end
 
     #Start PHP INI Admin Values
     if !@current_resource.php_ini_admin_values.nil?
         @current_resource.php_ini_admin_values.each do | k, v |
-            find_replace(file_name,"php_admin_value[#{ k }] = ",v,@new_resource.php_ini_admin_values["#{ k }"])
+            find_replace(file_name, "php_admin_value[#{ k }] = ", v, @new_resource.php_ini_admin_values["#{ k }"])
         end
     end
 
     #Start PHP INI Admin Flags
     if !@current_resource.php_ini_admin_flags.nil?
         @current_resource.php_ini_admin_flags.each do | k, v |
-            find_replace(file_name,"php_admin_flag[#{ k }] = ",v,@new_resource.php_ini_admin_flags["#{ k }"])
+            find_replace(file_name, "php_admin_flag[#{ k }] = ", v, @new_resource.php_ini_admin_flags["#{ k }"])
         end
     end
 
     #Start ENV Variables
     if !@current_resource.env_variables.nil?
         @current_resource.env_variables.each do | k, v |
-            find_replace(file_name,"env[#{ k }] = ",v,@new_resource.env_variables["#{ k }"])
+            find_replace(file_name, "env[#{ k }] = ",v,@new_resource.env_variables["#{ k }"])
         end
     end
 
@@ -450,7 +466,7 @@ def find_replace(file_name,attribute,find_str,replace_str)
     if find_str != replace_str
         #if the string is found, replace
         Chef::Log.debug "DEBUG: Line in #{ file_name } - #{ find_str } does not match desired configuration, updating with #{ replace_str }"
-        ::File.write(f = "#{ file_name }", ::File.read(f).gsub("#{ attribute }#{ find_str }","#{ attribute }#{ replace_str }"))
+        ::File.write(f = "#{ file_name }", ::File.read(f).gsub("#{ attribute }#{ find_str }", "#{ attribute }#{ replace_str }"))
     end
 
 end

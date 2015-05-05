@@ -1,6 +1,31 @@
 php5-fpm CHANGELOG
 =================
 
+0.4.4
+-----
+- stajkowski - Fixed socket statement to ip address transition on no overwrite, issue #8.
+
+- - -
+
+0.4.3
+-----
+- stajkowski - Fixed rlimit files import to convert to integer, issue #7.
+
+- - -
+
+0.4.2
+-----
+- stajkowski - Fixed metadata to support 11.10 and earlier Chefserver/chef-zero versions.  The metada labels boolean types as string but they are in fact boolean attributes as
+stated in the README.
+
+- - -
+
+0.4.1
+-----
+- stajkowski - Added support for sockets in LWRP Provider.  Please set use_sockets true and state the socket and backlog with listen_socket / listen_backlog.
+
+- - -
+
 0.4.0
 -----
 - stajkowski - As of version 4.0, you can auto-calculate the procs and workers needed and define the percentage of resources the pool should consume on the server.  This allows for quick creation of php-fpm pools and not having
