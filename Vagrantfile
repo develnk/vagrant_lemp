@@ -31,7 +31,7 @@ Vagrant.configure("2") do |config|
     end
 
     machine.vm.provision :chef_solo do |chef|
-      chef.cookbooks_path = ["cookbooks", "chef/applications"]
+      chef.cookbooks_path = ["cookbooks"]
       chef.roles_path = "chef/roles"
       chef.add_role "webserver"
 

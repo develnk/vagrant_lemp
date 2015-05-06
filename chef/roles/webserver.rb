@@ -10,19 +10,17 @@ run_list(
     "recipe[git]",
     "recipe[phpapp]",
     "recipe[composer]",
-    "recipe[drush::git]"
+    "recipe[drush::git]",
+    "recipe[phing]"
 )
 
 default_attributes(
-    "redis" => {
-        "source" => {
-            "version" => "2.6.7",
-            "timeout" => "0",
-        }
-    },
-
     "drush" => {
         "version" => "master"
+    },
+
+    "phing" => {
+        "install_method" => "composer"
     },
 
     "phpapp" => {
@@ -35,35 +33,6 @@ default_attributes(
             "html_errors" => "Off",
             "display_startup_errors" => "Off",
         },
-    },
-
-    # If you want to make the server available externally uncomment lines and change domain settings.
-    "postfix" => {
-        #"mail_type" => "master",
-        "main" => {
-            #"inet-interfaces" => "all",
-            "myhostname" => "localhost",
-            "mydomain" => "localdomain",
-            "mydestination" => "localhost.localdomain",
-        },
-    },
-
-    "dovecot" => {
-        "conf" => {
-            "mail_location" => "mbox:~/mail:INBOX=/var/mail/%u",
-            "mail_access_groups" => "mail",
-        },
-        "protocols" => {
-            "imap" => {},
-            "pop3" => {},
-        },
-        "auth" => {
-            "system" => {
-                "passdb" => {
-                    "driver" => "pam",
-                }
-            }
-        }
     },
 
     # Uncomment this lines if you want to test sending emails from a local server, prepared from the "postfix" recipe.
