@@ -36,7 +36,7 @@ class Chef
 
           # avoid 'Unit file changed on disk' warning
           execute "#{new_resource.name} :start systemctl daemon-reload" do
-            command '/usr/bin/systemctl daemon-reload'
+            command '/bin/systemctl daemon-reload'
             action :nothing
           end
 

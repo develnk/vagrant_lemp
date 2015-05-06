@@ -11,7 +11,7 @@ end
 
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "vagrant-ubuntu-15.04"
+  config.vm.box = "ubuntu-15.04"
   config.vm.network :forwarded_port, host: 4567, guest: 4567
 
   config.vm.define "webserver" do |machine|
@@ -46,9 +46,6 @@ Vagrant.configure("2") do |config|
                   "another_site" => {
                       "domain" => "site.com",
                   },
-                  "empty_site" => {
-
-                  }
               }
           }
       }

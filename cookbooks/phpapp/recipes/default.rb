@@ -20,6 +20,9 @@ include_recipe "php::module_gd"
 Dir.mkdir("/var/www") unless File.exists?("/var/www")
 FileUtils.chown(ENV['SSH_USER'], ENV['SSH_USER'], "/var/www")
 
+Dir.mkdir("/usr/lib/systemd/system") unless File.exists?("/usr/lib/systemd/system")
+Dir.mkdir("/usr/libexec") unless File.exists?("/usr/libexec")
+
 # Delete old config files.
 Dir.glob("/etc/nginx/sites-enabled/*.conf").each { |file| File.delete(file) }
 Dir.glob("/etc/nginx/sites-available/*.conf").each { |file| File.delete(file) }
@@ -110,10 +113,16 @@ if node.has_key?("project") && node["project"].has_key?("sites")
   end
 end
 
-mysql_service 'default' do
-  port '3306'
-  version '5.6'
+mysql_service "default" do
+  port "3307"
+  version "5.6"
+  bind_address '127.0.0.1'
   provider Chef::Provider::MysqlService::Systemd
-  initial_root_password 'root'
+  initial_root_password "root"
   action [:create, :start]
+end
+
+mysql_config "default" do
+  source "my.cnf.erb"
+  action :create
 end
