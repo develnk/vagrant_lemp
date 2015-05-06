@@ -9,6 +9,8 @@ run_list(
     "recipe[php5-fpm::install]",
     "recipe[git]",
     "recipe[phpapp]",
+    "recipe[composer]",
+    "recipe[drush::git]"
 )
 
 default_attributes(
@@ -17,6 +19,10 @@ default_attributes(
             "version" => "2.6.7",
             "timeout" => "0",
         }
+    },
+
+    "drush" => {
+        "version" => "master"
     },
 
     "phpapp" => {

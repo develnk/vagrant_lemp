@@ -126,3 +126,10 @@ mysql_config "default" do
   source "my.cnf.erb"
   action :create
 end
+
+composer_project "/usr/share/php/drush" do
+  dev true
+  quiet false
+  prefer_dist false
+  action :install
+end

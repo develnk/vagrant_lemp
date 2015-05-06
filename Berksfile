@@ -4,6 +4,8 @@ metadata
 
 cookbook 'apt'
 cookbook 'chef-client', '> 3.0'
+cookbook 'composer', '~> 2.0.0'
+cookbook 'drush', git: "https://github.com/msonnabaum/chef-drush.git"
 cookbook 'nginx'
 cookbook 'ohai'
 cookbook 'openssl'
