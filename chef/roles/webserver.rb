@@ -11,7 +11,8 @@ run_list(
     "recipe[phpapp]",
     "recipe[composer]",
     "recipe[drush::git]",
-    "recipe[phing]"
+    "recipe[phing]",
+    "recipe[xdebug]"
 )
 
 default_attributes(
@@ -37,6 +38,7 @@ default_attributes(
 
     # Uncomment this lines if you want to test sending emails from a local server, prepared from the "postfix" recipe.
     "php" => {
+        "ext_conf_dir" => "/etc/php5/fpm/conf.d",
         "directives" => {
             "SMTP" => "localhost.localdomain",
             "sendmail_from" => "vagrant@localhost.localdomain",
