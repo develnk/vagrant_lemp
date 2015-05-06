@@ -40,12 +40,15 @@ Vagrant.configure("2") do |config|
           "project" => {
               "sites" => {
                   "site" => {
-                      "demo" => 4567,
-                      "dir" => "/var/www/demo",
+                      "port" => 4567,
+                      "dir" => "/var/www/site",
                   },
                   "another_site" => {
                       "domain" => "site.com",
                   },
+                  "empty_site" => {
+
+                  }
               }
           }
       }
