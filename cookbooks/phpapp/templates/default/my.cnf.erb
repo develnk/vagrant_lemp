@@ -1,5 +1,4 @@
 [mysqld]
-innodb_additional_mem_pool_size = 32M
 innodb_buffer_pool_size        = 512M
 innodb_log_buffer_size         = 16M
 key_buffer_size                = 32M
@@ -16,3 +15,4 @@ query_cache_limit              = 4M
 query_cache_size               = 64M
 max_connections                = 20
 expire_logs_days               = 10
+max_open_files                 = 1024
