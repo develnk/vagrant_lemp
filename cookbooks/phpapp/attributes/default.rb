@@ -8,4 +8,3 @@ default['phpapp']['php']['html_errors'] = "Off";
 default['phpapp']['php']['display_startup_errors'] = "Off";
 default['nginx']['sendfile'] = "off";
 default['nginx']['client_max_body_size'] = "16M";
-default['php-fpm']['pools']['www']['listen'] = "127.0.0.1:9000";
