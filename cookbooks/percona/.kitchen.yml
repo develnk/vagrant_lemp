@@ -1,0 +1,43 @@
+driver:
+  require_chef_omnibus: <%= ENV.fetch("CHEF_VERSION", "latest") %>
+  ssh_key: <%= File.expand_path("./test/support/keys/vagrant") %>
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+
+platforms:
+  - name: amazon-2014
+    driver:
+      box: amazon-linux64-2014-vbox
+  - name: centos-6.5
+  - name: centos-7.0
+  - name: debian-7.8
+  - name: ubuntu-12.04
+  - name: ubuntu-14.04
+
+suites:
+  <% %w[5.5 5.6].each do |version| %>
+  - name: client_<%= version.tr(".", "") %>
+    attributes:
+      percona:
+        apt_keyserver: hkp://pgp.mit.edu:80
+        version: "<%= version %>"
+    run_list:
+      - recipe[percona::client]
+      - recipe[percona::toolkit]
+
+  - name: server_<%= version.tr(".", "") %>
+    attributes:
+      percona:
+        apt_keyserver: hkp://pgp.mit.edu:80
+        version: "<%= version %>"
+        server:
+          datadir: /tmp/mysql
+          debian_password: d3b1an
+          jemalloc: true
+          root_password: r00t
+    run_list:
+      - recipe[percona::server]
+      - recipe[percona::backup]
+  <% end %>

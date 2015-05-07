@@ -15,6 +15,7 @@ include_recipe "php::module_mysql"
 include_recipe "php::module_curl"
 #include_recipe "php::module_apc"
 include_recipe "php::module_gd"
+include_recipe "percona::server"
 
 # Create directory /var/www.
 Dir.mkdir("/var/www") unless File.exists?("/var/www")
@@ -128,20 +129,6 @@ php5_fpm_pool "sites" do
   overwrite true
   action :create
   notifies :restart, "service[#{node[:php_fpm][:package]}]", :delayed
-end
-
-mysql_service "default" do
-  port "3307"
-  version "5.6"
-  bind_address '127.0.0.1'
-  provider Chef::Provider::MysqlService::Systemd
-  initial_root_password "root"
-  action [:create, :start]
-end
-
-mysql_config "default" do
-  source "my.cnf.erb"
-  action :create
 end
 
 composer_project "/usr/share/php/drush" do

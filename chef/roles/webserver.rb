@@ -15,6 +15,12 @@ run_list(
     "recipe[xdebug]"
 )
 
+override_attributes(
+    "percona" => {
+        "use_percona_repos" => false
+    }
+)
+
 default_attributes(
     "drush" => {
         "version" => "master"
@@ -58,5 +64,14 @@ default_attributes(
             "remote_enable" => 1,
             "remote_log" => '/tmp/remote.log'
         }
+    },
+
+    "percona" => {
+        "server" => {
+            "username" => "root",
+            "root_password" => "root",
+            "debian_password" => "root",
+            "debian_username" => "root"
+        },
     }
 )
