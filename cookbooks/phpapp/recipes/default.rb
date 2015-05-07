@@ -113,6 +113,23 @@ if node.has_key?("project") && node["project"].has_key?("sites")
   end
 end
 
+php5_fpm_pool "sites" do
+  pool_user "www-data"
+  pool_group "www-data"
+  listen_address "127.0.0.1"
+  listen_port 9000
+  listen_allowed_clients "127.0.0.1"
+  listen_owner "nobody"
+  listen_group "nobody"
+  listen_mode "0666"
+  php_ini_flags (
+                    { "display_errors" => "on", "log_errors" => "on"}
+                )
+  overwrite true
+  action :create
+  notifies :restart, "service[#{node[:php_fpm][:package]}]", :delayed
+end
+
 mysql_service "default" do
   port "3307"
   version "5.6"
