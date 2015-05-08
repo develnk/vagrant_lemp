@@ -123,9 +123,7 @@ php5_fpm_pool "sites" do
   listen_owner "nobody"
   listen_group "nobody"
   listen_mode "0666"
-  php_ini_flags (
-                    { "display_errors" => "on", "log_errors" => "on"}
-                )
+  php_ini_values (node['phpapp']['php'])
   overwrite true
   action :create
   notifies :restart, "service[#{node[:php_fpm][:package]}]", :delayed

@@ -6,5 +6,6 @@ default['phpapp']['php']['max_execution_time'] = "30";
 default['phpapp']['php']['display_errors'] = "On";
 default['phpapp']['php']['html_errors'] = "Off";
 default['phpapp']['php']['display_startup_errors'] = "Off";
+default['phpapp']['php']['sendmail_path'] = "/usr/sbin/sendmail -t -i -f www@vagrant";
 default['nginx']['sendfile'] = "off";
 default['nginx']['client_max_body_size'] = "16M";
