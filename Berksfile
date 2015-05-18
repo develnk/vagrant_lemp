@@ -9,6 +9,7 @@ cookbook 'drush', git: "https://github.com/msonnabaum/chef-drush.git"
 cookbook 'nginx'
 cookbook 'ohai'
 cookbook 'openssl'
+cookbook 'percona'
 cookbook 'php'
 cookbook 'postfix'
 cookbook 'phpmd'

@@ -1,7 +1,0 @@
-cookbooks/*
-tmp
-.librarian/
-.kitchen/
-.kitchen.local.yml
-Berksfile.lock
-Gemfile.lock
