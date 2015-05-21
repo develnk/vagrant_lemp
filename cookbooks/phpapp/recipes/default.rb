@@ -53,7 +53,9 @@ if node.has_key?("project") && node["project"].has_key?("sites")
     site_name = site[0]
     site_config = site[1]
     site_port = ''
+    site_yii = false
     domain = ''
+    site_template = ''
     flag_www_redirect = false
     ssl = ''
     ssl_certificate = ''
@@ -78,6 +80,8 @@ if node.has_key?("project") && node["project"].has_key?("sites")
           ssl_certificate_key = config[1]
         when 'conf_inc'
           conf_inc = config[1]
+        when 'yii'
+          site_yii = true
       end
     end
     if site_port == '' && domain == ''
@@ -88,24 +92,30 @@ if node.has_key?("project") && node["project"].has_key?("sites")
       domain = site_name;
     end
 
+    if site_yii
+      site_template = "nginx_yii.site.conf.erb"
+    else
+      site_template = "nginx.site.conf.erb"
+    end
+
     template "/etc/nginx/sites-available/#{site_name}.conf" do
-      source "nginx.site.conf.erb"
+      source site_template
       mode "0640"
       owner "root"
       group "root"
       variables(
-                :server_name => site_name,
-                :server_port => site_port,
-                :domain => domain,
-                :flag_www_redirect => flag_www_redirect,
-                :ssl => ssl,
-                :ssl_certificate => ssl_certificate,
-                :ssl_certificate_key => ssl_certificate_key,
-                :conf_inc => conf_inc,
-                #:server_aliases => ["*.#{site_name}"],
-                :docroot => docroot,
-                :logdir => "#{node[:nginx][:log_dir]}"
-                )
+          :server_name => site_name,
+          :server_port => site_port,
+          :domain => domain,
+          :flag_www_redirect => flag_www_redirect,
+          :ssl => ssl,
+          :ssl_certificate => ssl_certificate,
+          :ssl_certificate_key => ssl_certificate_key,
+          :conf_inc => conf_inc,
+          #:server_aliases => ["*.#{site_name}"],
+          :docroot => docroot,
+          :logdir => "#{node[:nginx][:log_dir]}"
+      )
     end
 
     nginx_site "#{site_name}.conf" do

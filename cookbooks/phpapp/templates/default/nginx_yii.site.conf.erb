@@ -1,0 +1,78 @@
+<% if @conf_inc != '' -%>
+include <%= @conf_inc %>;
+<% end -%>
+<% if @flag_www_redirect -%>
+server {
+  server_name www.<%= @domain %>;
+  rewrite ^(.*) http://<%= @domain %>$1 permanent;
+}
+<% end -%>
+server {
+  <% if @server_port != '' -%>
+  listen <%= @server_port %>;
+  <% end -%>
+
+  <% if @domain != '' -%>
+  server_name <%= @domain %>;
+  <% end -%>
+  access_log  <%= @logdir %>/<%= @server_name %>.access.log;
+
+  <% if @ssl == 'on' -%>
+  ssl on;
+  <% end -%>
+  <% if @ssl_certificate != '' -%>
+  ssl_certificate <%= @ssl_certificate %>;
+  <% end -%>
+  <% if @ssl_certificate_key != '' -%>
+  ssl_certificate_key <%= @ssl_certificate_key %>;
+  <% end -%>
+
+  root <%= @docroot %>;
+  set $yii_bootstrap "index.php";
+  charset utf-8;
+
+  location / {
+    index  index.html $yii_bootstrap;
+    try_files $uri $uri/ /$yii_bootstrap?$args;
+  }
+
+  location ~ ^/(protected|framework|themes/\w+/views) {
+    deny  all;
+  }
+
+  location ~ \.(js|css|png|jpg|gif|swf|ico|pdf|mov|fla|zip|rar)$ {
+    try_files $uri =404;
+  }
+
+  location ~ \.php {
+    fastcgi_split_path_info  ^(.+\.php)(.*)$;
+
+    set $fsn /$yii_bootstrap;
+    if (-f $document_root$fastcgi_script_name){
+      set $fsn $fastcgi_script_name;
+    }
+
+    fastcgi_pass 127.0.0.1:9000;
+    include fastcgi.conf;
+    fastcgi_param  SCRIPT_FILENAME  $document_root$fsn;
+
+    fastcgi_param  PATH_INFO        $fastcgi_path_info;
+    fastcgi_param  PATH_TRANSLATED  $document_root$fsn;
+
+    fastcgi_connect_timeout 60;
+    fastcgi_send_timeout 180;
+    fastcgi_read_timeout 180;
+    fastcgi_buffer_size 128k;
+    fastcgi_buffers 4 256k;
+    fastcgi_busy_buffers_size 256k;
+    fastcgi_temp_file_write_size 256k;
+    fastcgi_intercept_errors on;
+  }
+
+## Disable viewing .htaccess & .htpassword
+  location ~ /\. {
+    deny all;
+    access_log off;
+    log_not_found off;
+  }
+}
