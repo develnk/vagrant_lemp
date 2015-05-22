@@ -94,6 +94,7 @@ if node.has_key?("project") && node["project"].has_key?("sites")
 
     if site_yii
       site_template = "nginx_yii.site.conf.erb"
+      docroot.concat('/web')
     else
       site_template = "nginx.site.conf.erb"
     end
