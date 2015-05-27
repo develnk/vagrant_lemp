@@ -12,6 +12,7 @@ end
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu-15.04"
+  config.vm.box_url = "http://develnk.ru/sites/default/files/ubuntu-15.04-amd64-vbox.box"
   config.vm.network :forwarded_port, host: 4567, guest: 4567
 
   config.vm.define "webserver" do |machine|
