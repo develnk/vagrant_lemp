@@ -7,7 +7,7 @@
 # All rights reserved - Do Not Redistribute
 #
 
-require 'fileutils'
+require "fileutils"
 
 include_recipe "nginx"
 include_recipe "php"
@@ -19,7 +19,7 @@ include_recipe "percona::server"
 
 # Create directory /var/www.
 Dir.mkdir("/var/www") unless File.exists?("/var/www")
-FileUtils.chown(ENV['SSH_USER'], ENV['SSH_USER'], "/var/www")
+FileUtils.chown("vagrant", "vagrant", "/var/www")
 
 Dir.mkdir("/usr/lib/systemd/system") unless File.exists?("/usr/lib/systemd/system")
 Dir.mkdir("/usr/libexec") unless File.exists?("/usr/libexec")
@@ -29,22 +29,22 @@ Dir.glob("/etc/nginx/sites-enabled/*.conf").each { |file| File.delete(file) }
 Dir.glob("/etc/nginx/sites-available/*.conf").each { |file| File.delete(file) }
 
 template "php.ini" do
-  path "#{node['php_fpm']['conf_dir']}/php.ini"
+  path "#{node["php_fpm"]["conf_dir"]}/php.ini"
   source "php.ini.erb"
   owner "root"
   group "root"
   mode 0644
-  variables(:directives => node['php']['directives'])
-  notifies :reload, 'service[php5-fpm]'
+  variables(:directives => node["php"]["directives"])
+  notifies :reload, "service[php5-fpm]"
 end
 
 template "nginx.conf" do
-  path "#{node['nginx']['dir']}/nginx.conf"
+  path "#{node["nginx"]["dir"]}/nginx.conf"
   source "nginx.conf.erb"
   owner "root"
   group "root"
   mode 0644
-  notifies :reload, 'service[nginx]'
+  notifies :reload, "service[nginx]"
 end        
 
 # nginx.site.conf templates
@@ -52,49 +52,49 @@ if node.has_key?("project") && node["project"].has_key?("sites")
   node["project"]["sites"].each do |site|
     site_name = site[0]
     site_config = site[1]
-    site_port = ''
+    site_port = ""
     site_yii = false
-    domain = ''
-    site_template = ''
+    domain = ""
+    site_template = ""
     flag_www_redirect = false
-    ssl = ''
-    ssl_certificate = ''
-    ssl_certificate_key = ''
-    conf_inc = ''
+    ssl = ""
+    ssl_certificate = ""
+    ssl_certificate_key = ""
+    conf_inc = ""
     docroot = "#{node[:doc_root]}/var/www/#{site_name}/project"
     site_config.each do |config|
       case config[0]
-        when 'port'
+        when "port"
           site_port = config[1]
-        when 'domain'
+        when "domain"
           domain = config[1]
-        when 'flag_www_redirect'
-          flag_www_redirect = config[1] == true || config[1] == 1 || config[1] == '1' || config[1] == 'true'
-        when 'dir'
+        when "flag_www_redirect"
+          flag_www_redirect = config[1] == true || config[1] == 1 || config[1] == "1" || config[1] == "true"
+        when "dir"
           docroot = "#{node[:doc_root]}#{config[1]}/project"
-        when 'ssl'
+        when "ssl"
           ssl = config[1].downcase
-        when 'ssl_certificate'
+        when "ssl_certificate"
           ssl_certificate = config[1]
-        when 'ssl_certificate_key'
+        when "ssl_certificate_key"
           ssl_certificate_key = config[1]
-        when 'conf_inc'
+        when "conf_inc"
           conf_inc = config[1]
-        when 'yii'
+        when "yii"
           site_yii = true
       end
     end
-    if site_port == '' && domain == ''
+    if site_port == "" && domain == ""
       ::Chef::Log.error("The #{site_name} project doesn't have port or domain option")
       break
     end
-    if domain == ''
+    if domain == ""
       domain = site_name;
     end
 
     if site_yii
       site_template = "nginx_yii.site.conf.erb"
-      docroot.concat('/web')
+      docroot.concat("/web")
     else
       site_template = "nginx.site.conf.erb"
     end
@@ -122,6 +122,10 @@ if node.has_key?("project") && node["project"].has_key?("sites")
     nginx_site "#{site_name}.conf" do
       :enable
     end
+
+    # Create directory for project
+    Dir.mkdir("/var/www/#{site_name}") unless File.exists?("/var/www/#{site_name}")
+    FileUtils.chown("vagrant", "vagrant", "/var/www/#{site_name}")
   end
 end
 
@@ -134,7 +138,7 @@ php5_fpm_pool "sites" do
   listen_owner "nobody"
   listen_group "nobody"
   listen_mode "0666"
-  php_ini_values (node['phpapp']['php'])
+  php_ini_values (node["phpapp"]["php"])
   overwrite true
   action :create
   notifies :restart, "service[#{node[:php_fpm][:package]}]", :delayed
@@ -145,4 +149,9 @@ composer_project "/usr/share/php/drush" do
   quiet false
   prefer_dist false
   action :install
+end
+
+package node["phpapp"]["php_packages"] do
+  action :install
+  notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
 end
