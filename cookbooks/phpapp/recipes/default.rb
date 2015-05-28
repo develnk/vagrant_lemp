@@ -155,3 +155,10 @@ package node["phpapp"]["php_packages"] do
   action :install
   notifies :restart, "service[#{node["php_fpm"]["package"]}]", :delayed
 end
+
+# Pear section
+execute "sudo pear upgrade-all"
+execute "sudo pear install -f PHP_CodeSniffer" do
+  not_if "phpcs --version | grep '^PHP_CodeSniffer'"
+end
+execute "sudo pear install -f HTTP_Request2"
